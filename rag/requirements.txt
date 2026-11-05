@@ -1,0 +1,19 @@
+# Runtime dependencies, pinned to the versions verified in Step 1.
+
+# Loading: PDFs (optional) and Markdown front matter
+pypdf==6.21.4
+python-frontmatter==1.3.0
+
+# Local embeddings and vector store
+fastembed==0.9.1
+chromadb==1.5.9
+
+# Generation
+anthropic==2.6.0
+
+# API
+fastapi==0.162.0
+uvicorn==0.54.0
+
+# Config
+python-dotenv==1.2.4
