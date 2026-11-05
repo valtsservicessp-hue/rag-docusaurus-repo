@@ -1,0 +1,14 @@
+# Python environment
+.venv/
+
+# Secrets: only .env.example is committed
+.env
+
+# Generated data: Chroma index and downloaded embedding models
+data/
+
+# Caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
