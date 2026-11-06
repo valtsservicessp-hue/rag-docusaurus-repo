@@ -14,23 +14,30 @@ import frontmatter
 import yaml
 
 from docchat.config import Settings, load_settings
-from docchat.urls import doc_slug, page_url, strip_number_prefix
+from docchat.mdx_clean import clean_mdx, scan_fences
+from docchat.urls import (
+    Slugger,
+    doc_slug,
+    heading_text,
+    page_url,
+    split_heading_id,
+    strip_number_prefix,
+)
 
 logger = logging.getLogger(__name__)
 
 EXTENSIONS = {".md", ".mdx"}
 EXCLUDED_DIRS = {"node_modules", "build", "__tests__"}
 
-_FENCE = re.compile(r"^ {0,3}(?P<marks>`{3,}|~{3,})")
 _HEADING = re.compile(r"^ {0,3}(?P<hashes>#{1,6})[ \t]+(?P<text>.+?)[ \t]*$")
-# Explicit heading ids: "{#my-id}" and the MDX comment form "{/* #my-id */}".
-_HEADING_ID = re.compile(r"\s*\{(?:#[^}]*|/\*\s*#.*?\*/)\}\s*$")
+_CLOSING_HASHES = re.compile(r"[ \t]+#+$")
 
 
 @dataclass(frozen=True)
 class Section:
     path: str  # Heading path below the page title, such as "Setup > Windows".
-    text: str
+    anchor: str  # Heading id on the page. Empty means the top of the page.
+    text: str  # Cleaned text.
 
 
 @dataclass(frozen=True)
@@ -53,57 +60,48 @@ class Skipped:
 
 
 def split_sections(body: str) -> tuple[str | None, list[Section]]:
-    """Split Markdown by headings. Returns (first H1, sections with text).
+    """Split MDX by headings. Returns (first H1, sections with text).
 
-    A "# comment" inside a code block is not a heading, so fences are tracked.
+    Splitting runs before cleaning, because cleaning drops the {/* #id */}
+    comments that set anchors. Headings inside code blocks are ignored.
     """
     h1 = None
     stack: list[tuple[int, str]] = []
     current_path = ""
+    current_anchor = ""
     current_lines: list[str] = []
     sections: list[Section] = []
-    fence = None
+    slugger = Slugger()
 
     def flush() -> None:
-        text = "\n".join(current_lines).strip()
+        text = clean_mdx("\n".join(current_lines))
         if text:
-            sections.append(Section(current_path, text))
+            sections.append(Section(current_path, current_anchor, text))
         current_lines.clear()
 
-    for line in body.splitlines():
-        fence_match = _FENCE.match(line)
-        if fence is not None:
-            # A fence closes only on the same mark, at least as long, alone on a line.
-            closes = (
-                fence_match
-                and fence_match["marks"].startswith(fence)
-                and line.strip() == fence_match["marks"]
-            )
-            if closes:
-                fence = None
-            current_lines.append(line)
-            continue
-        if fence_match:
-            fence = fence_match["marks"]
-            current_lines.append(line)
-            continue
-
-        heading = _HEADING.match(line)
+    for line, kind in scan_fences(body):
+        heading = _HEADING.match(line) if kind == "text" else None
         if not heading:
             current_lines.append(line)
             continue
 
         flush()
         level = len(heading["hashes"])
-        text = _HEADING_ID.sub("", heading["text"]).rstrip("# \t")
+        raw, explicit_id = split_heading_id(heading["text"])
+        text = heading_text(_CLOSING_HASHES.sub("", raw))
+        # Every heading counts towards duplicates, even an H1 with no anchor.
+        anchor = explicit_id or slugger.slug(text)
+
         if level == 1:
             h1 = h1 or text
             stack.clear()
+            current_anchor = ""
         else:
             while stack and stack[-1][0] >= level:
                 stack.pop()
             stack.append((level, text))
-        current_path = " > ".join(heading_text for _, heading_text in stack)
+            current_anchor = anchor
+        current_path = " > ".join(name for _, name in stack)
 
     flush()
     return h1, sections
