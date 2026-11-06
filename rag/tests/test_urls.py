@@ -206,7 +206,3 @@ def test_headings_in_code_are_ignored():
 def test_closing_hashes_are_removed_but_csharp_is_kept():
     _, sections = split_sections("## Setup ##\n\nA.\n\n## Learn C#\n\nB.")
     assert [s.path for s in sections] == ["Setup", "Learn C#"]
-
-
-def test_ci_demo():
-    assert 1 == 2
