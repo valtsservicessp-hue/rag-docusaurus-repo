@@ -16,6 +16,12 @@ class Hit:
     text: str
 
 
+def snippet(hit: Hit, length: int = 100) -> str:
+    """Return the start of the body, without the title prefix, on one line."""
+    body = hit.text.split("\n\n", 1)[-1]
+    return " ".join(body.split())[:length]
+
+
 def retrieve(
     query: str,
     store: DocStore,
