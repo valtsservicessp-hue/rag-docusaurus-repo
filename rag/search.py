@@ -7,14 +7,8 @@ import argparse
 import sys
 
 from docchat.config import load_settings
-from docchat.retrieve import Hit, retrieve
+from docchat.retrieve import retrieve, snippet
 from docchat.store import DocStore, FastEmbedder, StoreError
-
-
-def snippet(hit: Hit, length: int = 100) -> str:
-    """Return the start of the body, without the title prefix, on one line."""
-    body = hit.text.split("\n\n", 1)[-1]
-    return " ".join(body.split())[:length]
 
 
 def main() -> int:
