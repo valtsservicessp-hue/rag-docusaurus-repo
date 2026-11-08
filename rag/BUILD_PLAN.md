@@ -51,7 +51,7 @@ rag/
 ├── CLAUDE.md
 ├── README.md
 ├── INTERVIEW_NOTES.md
-├── requirements.txt / requirements-dev.txt / .env.example / .gitignore / .dockerignore / Dockerfile
+├── requirements.txt / requirements-dev.txt / .env.example / .gitignore / Dockerfile.dockerignore / Dockerfile
 ├── docchat/
 │   ├── __init__.py
 │   ├── config.py
@@ -227,11 +227,11 @@ Same design as a plain RAG: recursive split, **stable ids** (hash of source + se
 **Done when:** all 3 jobs are green. PR merged.
 
 ### Step 12: CD (Docker and GHCR)
-`rag/Dockerfile`, `rag/.dockerignore`, `release.yml`. Optional local check: `docker build -f rag/Dockerfile -t docchat .`, then `docker run -p 8001:8001 docchat`, then `npm start` and chat against the container. Release: `git tag v0.1.0`, `git push origin v0.1.0`.
+`rag/Dockerfile`, `rag/Dockerfile.dockerignore` (a plain `rag/.dockerignore` is ignored when the build context is the repo root), `release.yml`. Optional local check: `docker build -f rag/Dockerfile -t docchat .`, then `docker run -p 8001:8001 docchat`, then `npm start` and chat against the container. Release: `git tag v0.1.0`, `git push origin v0.1.0`.
 **Done when:** the release workflow is green, and the image and Release exist.
 
 ### Step 13 (optional): MCP tool
-`rag/mcp_server.py` (FastMCP, Streamable HTTP :8002) with `search_docs(query, k)` returning titles, URLs and snippets, so Claude Code and other agents can query the docs. Verify the `mcp` v2 API first.
+`rag/mcp_server.py` (`MCPServer`, which was `FastMCP` before mcp v2; Streamable HTTP :8002) with `search_docs(query, k)` returning titles, URLs and snippets, so Claude Code and other agents can query the docs. Verify the `mcp` v2 API first.
 
 ### Step 14: README and interview notes
 - `rag/README.md`: architecture, setup, the two-terminal run, Docker, CI/CD, config table, and **production gaps**: hosted backend for the static site, auth for private docs, versioned docs (`versioned_docs/`), i18n folders, hybrid search and reranking, feedback (👍/👎) logging, analytics on unanswered questions (a docs-gap signal), cost limits, caching.
