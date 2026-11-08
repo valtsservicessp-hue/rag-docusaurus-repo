@@ -1,0 +1,77 @@
+[
+  {
+    "id": "node-version",
+    "question": "What version of Node.js do I need?",
+    "expected_url": "/docs/intro#what-youll-need"
+  },
+  {
+    "id": "dev-server",
+    "question": "How do I run the site locally while I edit it?",
+    "expected_url": "/docs/intro#start-your-site"
+  },
+  {
+    "id": "react-page",
+    "question": "How do I add a standalone page written in React?",
+    "expected_url": "/docs/tutorial-basics/create-a-page#create-your-first-react-page"
+  },
+  {
+    "id": "sidebar-label",
+    "question": "How do I change a document's label and position in the sidebar?",
+    "expected_url": "/docs/tutorial-basics/create-a-document#configure-the-sidebar"
+  },
+  {
+    "id": "blog-post",
+    "question": "Where do I create the file for a new blog post?",
+    "expected_url": "/docs/tutorial-basics/create-a-blog-post#create-your-first-post"
+  },
+  {
+    "id": "heading-id",
+    "question": "How do I give a heading a custom anchor id for links?",
+    "expected_url": "/docs/tutorial-basics/markdown-features#my-custom-id"
+  },
+  {
+    "id": "callouts",
+    "question": "How do I add a tip or a warning callout box?",
+    "expected_url": "/docs/tutorial-basics/markdown-features#admonitions"
+  },
+  {
+    "id": "production-build",
+    "question": "How do I build the site for production?",
+    "expected_url": "/docs/tutorial-basics/deploy-your-site#build-your-site"
+  },
+  {
+    "id": "serve-build",
+    "question": "How can I test the production build on my machine before deploying?",
+    "expected_url": "/docs/tutorial-basics/deploy-your-site#deploy-your-site-1"
+  },
+  {
+    "id": "docs-version",
+    "question": "How do I release version 1.0 of my documentation?",
+    "expected_url": "/docs/tutorial-extras/manage-docs-versions#create-a-docs-version"
+  },
+  {
+    "id": "locale-dropdown-es",
+    "question": "¿Cómo agrego un menú desplegable para cambiar de idioma?",
+    "expected_url": "/docs/tutorial-extras/translate-your-site#add-a-locale-dropdown"
+  },
+  {
+    "id": "whats-next",
+    "question": "What should I read after finishing the tutorial?",
+    "expected_url": "/docs/tutorial-basics/congratulations#whats-next"
+  },
+  {
+    "id": "off-topic-recipe",
+    "question": "What is a good recipe for pasta carbonara?",
+    "expected_url": null
+  },
+  {
+    "id": "off-topic-sport",
+    "question": "Who won the football World Cup in 2022?",
+    "expected_url": null
+  },
+  {
+    "id": "off-topic-car",
+    "question": "How often should I change the oil in my car?",
+    "expected_url": null
+  }
+]
