@@ -1,0 +1,79 @@
+name: Release
+
+# Push a tag like v0.1.0 to publish an image and a GitHub Release.
+on:
+  push:
+    tags: ["v*"]
+
+# Write access is limited to this workflow: packages to push the image,
+# contents to create the Release. CI keeps its read-only token.
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  image:
+    name: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LOCAL_IMAGE: docchat:test
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Name the image
+        run: |
+          # Registry names must be lowercase; v0.1.0 becomes 0.1.0.
+          image="ghcr.io/${GITHUB_REPOSITORY,,}-docchat"
+          echo "IMAGE=$image" >> "$GITHUB_ENV"
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      # Ingest runs inside the build, so this image holds exactly the docs at this tag.
+      - name: Build the image
+        run: >
+          docker build -f rag/Dockerfile -t "$LOCAL_IMAGE"
+          --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}"
+          --label "org.opencontainers.image.version=$VERSION"
+          --label "org.opencontainers.image.revision=${{ github.sha }}"
+          .
+
+      # Nothing is pushed unless the image works and its baked index passes the gate.
+      - name: Smoke test the image
+        run: |
+          docker run -d --name docchat -p 8001:8001 "$LOCAL_IMAGE"
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:8001/healthz > health.json && break
+            sleep 2
+          done
+          cat health.json
+          python3 -c "import json; h = json.load(open('health.json')); assert h['status'] == 'ok' and h['chunks'] > 0, h"
+          curl -fsS -X POST http://127.0.0.1:8001/api/ask \
+            -H "Content-Type: application/json" \
+            -d '{"question": "How do I build the site for production?"}' > ask.json
+          python3 -c "import json; a = json.load(open('ask.json')); assert a['mode'] == 'retrieval_only' and a['citations'], a"
+          # A separate container, so two processes never share one Chroma index.
+          docker run --rm "$LOCAL_IMAGE" python eval/eval_retrieval.py --min-hit-rate 0.8 --min-reject-rate 1
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs docchat || true
+
+      - name: Push to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          for tag in "$VERSION" latest; do
+            docker tag "$LOCAL_IMAGE" "$IMAGE:$tag"
+            docker push "$IMAGE:$tag"
+          done
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" --generate-notes
+          --title "$GITHUB_REF_NAME"
+          --notes "Image: \`$IMAGE:$VERSION\` (also \`latest\`). Run: \`docker run -p 8001:8001 $IMAGE:$VERSION\`"

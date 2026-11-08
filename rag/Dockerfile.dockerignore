@@ -1,0 +1,21 @@
+# Docker reads this file because it is named after rag/Dockerfile. A plain
+# rag/.dockerignore would be ignored, since the build context is the repo root.
+#
+# Allowlist: send nothing except what the image needs, so a new secret or a
+# large folder can never leak into the image by accident.
+*
+!docs/
+!rag/
+
+# Then exclude what must never go in from the allowed folders.
+rag/.env
+rag/.env.*
+!rag/.env.example
+rag/.venv/
+rag/data/
+rag/tests/
+rag/docusaurus-plugin/
+**/__pycache__/
+**/*.py[cod]
+rag/.pytest_cache/
+rag/.ruff_cache/
